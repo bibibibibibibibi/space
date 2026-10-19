@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>生成图标 · 太空弹球</title>
+<style>
+  html, body { margin: 0; min-height: 100%; background: #04050f; color: #dff2ff; font-family: "PingFang SC", "Microsoft YaHei", sans-serif; }
+  main { max-width: 720px; margin: 0 auto; padding: 32px 20px 60px; }
+  h1 { font-size: 24px; margin: 0 0 8px; }
+  p { font-size: 15px; line-height: 1.7; color: #a9c6e8; }
+  code { color: #ffd166; }
+  .row { display: flex; flex-wrap: wrap; gap: 12px; margin: 24px 0; }
+  button { border: 0; border-radius: 14px; padding: 14px 20px; font-size: 16px; font-weight: 700; color: #062038; background: linear-gradient(135deg, #7fe0ff, #3f9bff); }
+  button:active { transform: scale(0.98); }
+  #status { min-height: 22px; font-size: 14px; color: #7fe0ff; }
+  #preview { margin-top: 20px; }
+  #preview img { width: 160px; height: 160px; border-radius: 24px; border: 1px solid rgba(120, 200, 255, 0.35); }
+  .hint { font-size: 13px; color: #7c98bd; }
+</style>
+</head>
+<body>
+<main>
+  <h1>太空弹球 · 图标生成</h1>
+  <p>点下面的按钮，会下载对应尺寸的 PNG。把 4 个文件放进 <code>icons/</code> 目录，文件名保持：<br>
+    <code>icon-180.png</code>、<code>icon-192.png</code>、<code>icon-512.png</code>、<code>icon-maskable-512.png</code>。</p>
+  <div class="row">
+    <button type="button" data-size="180">180×180（主屏）</button>
+    <button type="button" data-size="192">192×192</button>
+    <button type="button" data-size="512">512×512</button>
+    <button type="button" data-size="512" data-maskable="1">512×512（maskable）</button>
+  </div>
+  <div id="status"></div>
+  <div id="preview"></div>
+  <p class="hint">iPad 上如果按钮只是打开图片，长按下面的预览图 →「存储到照片/文件」，再改名。最稳的是在电脑浏览器里生成。</p>
+</main>
+<script>
+(function () {
+  'use strict';
+
+  function roundRect(c, x, y, w, h, r) {
+    c.beginPath();
+    c.moveTo(x + r, y);
+    c.arcTo(x + w, y, x + w, y + h, r);
+    c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r);
+    c.arcTo(x, y, x + w, y, r);
+    c.closePath();
+  }
+
+  function drawIcon(c, size, maskable) {
+    var s = size / 512;
+    c.setTransform(s, 0, 0, s, 0, 0);
+    c.clearRect(0, 0, 512, 512);
+
+    var bg = c.createRadialGradient(256, 194, 20, 256, 280, 380);
+    bg.addColorStop(0, '#16296b');
+    bg.addColorStop(0.65, '#0a1233');
+    bg.addColorStop(1, '#04050f');
+    c.fillStyle = bg;
+    if (maskable) {
+      c.fillRect(0, 0, 512, 512);
+    } else {
+      roundRect(c, 0, 0, 512, 512, 112);
+      c.fill();
+    }
+
+    c.save();
+    c.translate(256, 268);
+    c.rotate(-18 * Math.PI / 180);
+    c.strokeStyle = 'rgba(127,224,255,0.5)';
+    c.lineWidth = 12;
+    c.beginPath();
+    c.ellipse(0, 0, 196, 62, 0, 0, Math.PI * 2);
+    c.stroke();
+    c.restore();
+
+    c.save();
+    if (maskable) {
+      c.translate(256, 256);
+      c.scale(0.82, 0.82);
+      c.translate(-256, -256);
+    }
+    var ball = c.createRadialGradient(218, 220, 8, 256, 262, 122);
+    ball.addColorStop(0, '#fffdf2');
+    ball.addColorStop(0.42, '#ffe08a');
+    ball.addColorStop(0.78, '#ffa93d');
+    ball.addColorStop(1, '#e85d1f');
+    c.fillStyle = ball;
+    c.beginPath();
+    c.arc(256, 262, 118, 0, Math.PI * 2);
+    c.fill();
+
+    c.fillStyle = 'rgba(255,255,255,0.8)';
+    c.beginPath();
+    c.arc(218, 220, 26, 0, Math.PI * 2);
+    c.fill();
+    c.restore();
+
+    var stars = [[90, 120, 8, 0.85], [420, 96, 6, 0.6], [438, 380, 9, 0.5], [78, 392, 5, 0.55], [370, 420, 4, 0.45]];
+    for (var i = 0; i < stars.length; i++) {
+      c.globalAlpha = stars[i][3];
+      c.fillStyle = '#ffffff';
+      c.beginPath();
+      c.arc(stars[i][0], stars[i][1], stars[i][2], 0, Math.PI * 2);
+      c.fill();
+    }
+    c.globalAlpha = 0.9;
+    c.fillStyle = '#ffd166';
+    c.beginPath();
+    c.moveTo(256, 78);
+    c.lineTo(263, 98);
+    c.lineTo(283, 105);
+    c.lineTo(263, 112);
+    c.lineTo(256, 132);
+    c.lineTo(249, 112);
+    c.lineTo(229, 105);
+    c.lineTo(249, 98);
+    c.closePath();
+    c.fill();
+    c.globalAlpha = 1;
+  }
+
+  function save(size, maskable) {
+    var c = document.createElement('canvas');
+    c.width = size;
+    c.height = size;
+    drawIcon(c.getContext('2d'), size, maskable);
+
+    var name = maskable ? 'icon-maskable-512.png' : 'icon-' + size + '.png';
+    var dataUrl = c.toDataURL('image/png');
+
+    var preview = document.getElementById('preview');
+    preview.innerHTML = '';
+    var img = document.createElement('img');
+    img.src = dataUrl;
+    img.alt = name;
+    preview.appendChild(img);
+
+    var status = document.getElementById('status');
+    status.textContent = '已生成 ' + name + '（' + size + '×' + size + '）';
+
+    var a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+
+  var btns = document.querySelectorAll('button[data-size]');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].addEventListener('click', function () {
+      var size = parseInt(this.getAttribute('data-size'), 10);
+      var maskable = this.getAttribute('data-maskable') === '1';
+      save(size, maskable);
+    });
+  }
+})();
+</script>
+</body>
+</html>
