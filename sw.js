@@ -1,7 +1,7 @@
 /* 太空弹球 PWA Service Worker
  * 改游戏后把 CACHE 的版本号 +1，旧缓存会自动清掉。
  */
-var CACHE = 'space-pinball-v11';
+var CACHE = 'space-pinball-v16';
 var CORE = [
   './',
   './index.html',

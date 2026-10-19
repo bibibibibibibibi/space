@@ -155,15 +155,15 @@
 
   var SUN = { x: 360, y: 400, r: 58, cool: 0, glow: 0, freq: 262 };
   var ORBITERS = [
-    { id: 'mercury', name: '水星', a: 127, b: 135, angle: 0.5, speed: 0.62, r: 10, c1: '#e8e8e8', c2: '#8a8a8a', freq: 523, cool: 0, glow: 0 },
-    { id: 'venus', name: '金星', a: 148, b: 160, angle: 2.2, speed: 0.48, r: 12, c1: '#fff0c0', c2: '#d9a441', freq: 587, cool: 0, glow: 0 },
-    { id: 'earth', name: '地球', a: 180, b: 195, angle: 3.8, speed: 0.36, r: 14, c1: '#7fe0ff', c2: '#2f7bff', freq: 659, cool: 0, glow: 0 },
-    { id: 'mars', name: '火星', a: 212, b: 230, angle: 5.3, speed: 0.29, r: 12, c1: '#ffb07a', c2: '#c1440e', freq: 698, cool: 0, glow: 0 },
-    { id: 'jupiter', name: '木星', a: 247, b: 270, angle: 1.4, speed: 0.22, r: 17, c1: '#ffe0b0', c2: '#c98a5a', bands: true, freq: 784, cool: 0, glow: 0 },
-    { id: 'saturn', name: '土星', a: 265, b: 305, angle: 4.6, speed: 0.17, r: 15, c1: '#ffe9b0', c2: '#d8b26a', hasRing: true, freq: 880, cool: 0, glow: 0 }
+    { id: 'mercury', name: '水星', a: 127, b: 135, angle: 0.5, speed: 0.62, r: 15, c1: '#e8e8e8', c2: '#8a8a8a', freq: 523, cool: 0, glow: 0 },
+    { id: 'venus', name: '金星', a: 148, b: 160, angle: 2.2, speed: 0.48, r: 18, c1: '#fff0c0', c2: '#d9a441', freq: 587, cool: 0, glow: 0 },
+    { id: 'earth', name: '地球', a: 180, b: 195, angle: 3.8, speed: 0.36, r: 22, c1: '#7fe0ff', c2: '#2f7bff', freq: 659, cool: 0, glow: 0 },
+    { id: 'mars', name: '火星', a: 212, b: 230, angle: 5.3, speed: 0.29, r: 17, c1: '#ffb07a', c2: '#c1440e', freq: 698, cool: 0, glow: 0 },
+    { id: 'jupiter', name: '木星', a: 247, b: 270, angle: 1.4, speed: 0.22, r: 28, c1: '#ffe0b0', c2: '#c98a5a', bands: true, freq: 784, cool: 0, glow: 0 },
+    { id: 'saturn', name: '土星', a: 265, b: 305, angle: 4.6, speed: 0.17, r: 22, c1: '#ffe9b0', c2: '#d8b26a', hasRing: true, freq: 880, cool: 0, glow: 0 }
   ];
-  var moon = { orbit: 34, angle: 0.2, speed: 2.2, r: 7, cool: 0, glow: 0 };
-  var sat = { orbit: 52, angle: 2.4, speed: 1.4, r: 6, cool: 0, glow: 0 };
+  var moon = { orbit: 40, angle: 0.2, speed: 2.2, r: 8, cool: 0, glow: 0 };
+  var sat = { orbit: 58, angle: 2.4, speed: 1.4, r: 6, cool: 0, glow: 0 };
   var voyager = { x: -70, y: 170, vx: 26, r: 15, cool: 0, glow: 0 };
   var alien = { x: 480, y: 780, vx: 26, phase: 0, r: 24, cool: 0, glow: 0 };
   var alien2 = { x: 250, y: 620, vx: 22, phase: 1.1, r: 20, cool: 0, glow: 0 };
@@ -175,6 +175,7 @@
   ];
   var known = {}, knownCount = 0, card = null, cardT = 0, lastFact = null;
   var quizUsed = false, quizList = [], quizIndex = 0, quizCorrect = 0, quizSel = 0, quizFeedback = 0, quizNextT = 0;
+  var launchHintT = 0, launchHintMsg = '', chargeTime = 0;
   var FACTS = {
     sun: { name: '太阳', text: '太阳是一颗恒星，给地球光和热。' },
     mercury: { name: '水星', text: '离太阳最近，白天很热，晚上很冷。' },
@@ -448,6 +449,11 @@
     if (p.y >= 670 && p.y <= 756) return 2;
     return -1;
   }
+  function launcherHit(p) {
+    if (p.x >= 636 && p.x <= 720 && p.y >= 250 && p.y <= 1202) return true;
+    var dx = p.x - 690, dy = p.y - 1160;
+    return dx * dx + dy * dy <= 80 * 80;
+  }
 
   canvas.addEventListener('pointerdown', function (e) {
     e.preventDefault();
@@ -473,7 +479,13 @@
     }
     if (state === 'ready') {
       if (!charging) {
-        charging = true; chargePhase = 0; chargePointer = e.pointerId; readyTimer = 0;
+        if (!launcherHit(p)) {
+          launchHintT = 1.4;
+          launchHintMsg = '要按住右边的发射器哦';
+          tone(220, 0.08, 'sine', 0.03);
+          return;
+        }
+        charging = true; charge = 0; chargePhase = 0; chargePointer = e.pointerId; readyTimer = 0; chargeTime = 0;
         try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
       }
       return;
@@ -492,7 +504,7 @@
   function releasePointer(e) {
     if (state === 'ready' && charging && e.pointerId === chargePointer) {
       chargePointer = -1;
-      startLaunch(charge);
+      releaseCharge();
       return;
     }
     var side = pointers.get(e.pointerId);
@@ -505,14 +517,14 @@
   canvas.addEventListener('pointerup', releasePointer);
   canvas.addEventListener('pointercancel', function (e) {
     if (e.pointerId === chargePointer) {
-      charging = false; charge = 0; chargePointer = -1; return;
+      charging = false; charge = 0; chargePointer = -1; chargeTime = 0; ball.y = 1160; launchHintT = 0; return;
     }
     releasePointer(e);
   });
   window.addEventListener('blur', function () {
     pointers.clear(); touchL = 0; touchR = 0;
     keyState.left = false; keyState.right = false;
-    charging = false; charge = 0; chargePointer = -1;
+    charging = false; charge = 0; chargePointer = -1; chargeTime = 0; ball.y = 1160;
     refreshInput();
   });
 
@@ -532,7 +544,7 @@
       return;
     }
     if (state === 'ready') {
-      if (k === ' ' && !charging) { e.preventDefault(); charging = true; chargePhase = 0; readyTimer = 0; }
+      if (k === ' ' && !charging) { e.preventDefault(); charging = true; charge = 0; chargePhase = 0; readyTimer = 0; chargeTime = 0; }
       return;
     }
     if (state === 'launching') return;
@@ -545,7 +557,7 @@
   });
   window.addEventListener('keyup', function (e) {
     var k = e.key;
-    if (k === ' ' && state === 'ready' && charging) { e.preventDefault(); startLaunch(charge); return; }
+    if (k === ' ' && state === 'ready' && charging) { e.preventDefault(); releaseCharge(); return; }
     if (k === 'z' || k === 'Z' || k === 'ArrowLeft') keyState.left = false;
     if (k === '/' || k === 'ArrowRight' || k === 'x' || k === 'X') keyState.right = false;
     refreshInput();
@@ -558,12 +570,12 @@
     if (state === 'quiz') { answerQuiz(quizSel); return; }
     if (state === 'menu') { startGame(menuSel); return; }
     if (state === 'ready') {
-      if (!charging) { charging = true; chargePhase = 0; readyTimer = 0; }
+      if (!charging) { charging = true; charge = 0; chargePhase = 0; readyTimer = 0; chargeTime = 0; }
       return;
     }
     if (state === 'over') startGame(diff);
   }
-  function onPadARelease() { if (state === 'ready' && charging) startLaunch(charge); }
+  function onPadARelease() { if (state === 'ready' && charging) releaseCharge(); }
   function onPadB() { if (state === 'over') toMenu(); }
   function onPadStart() {
     if (state === 'menu') { startGame(menuSel); return; }
@@ -688,7 +700,7 @@
     ball.active = false; ball.vx = 0; ball.vy = 0;
     var p = pipeAt(0); ball.x = p.x; ball.y = p.y;
     ball.trail.length = 0; ball.stuck = 0;
-    charge = 0; charging = false; chargePhase = 0; chargePointer = -1; readyTimer = 0;
+    charge = 0; charging = false; chargePhase = 0; chargePointer = -1; readyTimer = 0; chargeTime = 0;
     setFlippersRest();
     burst(690, 1160, '#9fd8ff', 10, 150);
     tone(320, 0.18, 'sine', 0.04, 420);
@@ -762,17 +774,30 @@
   }
   function startLaunch(power) {
     if (state !== 'ready') return;
-    charging = false; charge = 0; chargePointer = -1;
+    charging = false; charge = 0; chargePointer = -1; chargeTime = 0;
     launchPow = clamp(power, 0, 1); launchT = 0;
     state = 'launching'; ball.active = false; ball.trail.length = 0;
     burst(690, 1160, '#ffe6a0', 12, 180);
     playLaunch();
   }
+  function releaseCharge() {
+    if (state !== 'ready' || !charging) return;
+    charging = false;
+    if (chargeTime < 1) {
+      charge = 0; chargeTime = 0;
+      ball.y = 1160;
+      launchHintT = 1.2; launchHintMsg = '力度不够，球滑回去了';
+      tone(220, 0.12, 'triangle', 0.05, 160);
+      burst(690, 1160, '#9fd8ff', 6, 80);
+      return;
+    }
+    startLaunch(charge);
+  }
   function finishLaunch() {
     state = 'playing';
     ball.active = true; ball.x = 636; ball.y = 280;
     var tan = pipeTan(1);
-    var sp = D.launch * (0.72 + 0.28 * launchPow);
+    var sp = D.launch * (0.4 + 0.6 * launchPow);
     ball.vx = tan.x * sp; ball.vy = tan.y * sp;
     ball.trail.length = 0; ball.stuck = 0;
     burst(636, 280, '#9fe4ff', 18, 260);
@@ -1132,6 +1157,7 @@
     for (i = 0; i < springs.length; i++) { springs[i].cool = Math.max(0, springs[i].cool - dt); springs[i].glow = Math.max(0, springs[i].glow - dt * 3.2); }
     for (i = 0; i < belt.rocks.length; i++) { belt.rocks[i].cool = Math.max(0, belt.rocks[i].cool - dt); belt.rocks[i].glow = Math.max(0, belt.rocks[i].glow - dt * 2.6); }
     if (cardT > 0) cardT -= dt;
+    if (launchHintT > 0) launchHintT -= dt;
     if (scorePop > 0) scorePop -= dt;
     if (cheerT > 0) cheerT -= dt;
     if (padToastT > 0) padToastT -= dt;
@@ -1148,11 +1174,10 @@
     } else if (state === 'ready') {
       readyTimer += dt;
       if (charging) {
-        chargePhase += dt * 1.15;
-        var t = chargePhase % 2;
-        charge = t < 1 ? t : 2 - t;
+        chargeTime += dt;
+        charge = Math.min(1, chargeTime / 3);
+        ball.y = 1160 - charge * 10;
       }
-      if (readyTimer > 8) startLaunch(charging ? Math.max(0.5, charge) : 0.65);
     } else if (state === 'launching') {
       launchT += dt / 0.5;
       if (launchT >= 1) { launchT = 1; finishLaunch(); }
@@ -1338,7 +1363,7 @@
         b.beginPath(); b.arc(pts[cj][0], pts[cj][1], 1.4, 0, TAU); b.fill();
       }
       b.fillStyle = 'rgba(160,200,255,0.35)';
-      b.font = '11px "PingFang SC","Microsoft YaHei",sans-serif';
+      b.font = '13px "PingFang SC","Microsoft YaHei",sans-serif';
       b.textAlign = 'center';
       b.fillText(label, lx, ly);
     }
@@ -1366,7 +1391,7 @@
       b.beginPath(); b.arc(rx, ry, rs, 0, TAU); b.fill();
     }
     b.fillStyle = 'rgba(160,200,255,0.35)';
-    b.font = '11px "PingFang SC","Microsoft YaHei",sans-serif';
+    b.font = '14px "PingFang SC","Microsoft YaHei",sans-serif';
     b.textAlign = 'center';
     b.fillText('小行星带', 520, 690);
 
@@ -1464,6 +1489,16 @@
     ctx.strokeStyle = 'rgba(120,200,255,0.6)';
     ctx.lineWidth = 3;
     ctx.beginPath(); ctx.arc(base.x, base.y + 16, 26, 0, TAU); ctx.stroke();
+
+    if (state === 'ready') {
+      ctx.save();
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = '700 14px ' + FONT;
+      var cs = Math.min(3, chargeTime);
+      ctx.fillStyle = chargeTime < 1 ? 'rgba(255,150,150,0.95)' : 'rgba(180,235,255,0.95)';
+      ctx.fillText(cs.toFixed(1) + 's', base.x, base.y - 42);
+      ctx.restore();
+    }
     ctx.restore();
   }
 
@@ -1775,8 +1810,8 @@
     ctx.restore();
     ctx.save();
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.font = '700 18px ' + FONT;
-    ctx.fillStyle = 'rgba(190,220,255,0.65)';
+    ctx.font = '700 20px ' + FONT;
+    ctx.fillStyle = 'rgba(190,220,255,0.8)';
     ctx.fillText(D.name, 360, 88);
     ctx.restore();
   }
@@ -1806,9 +1841,16 @@
     ctx.save();
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.font = '700 19px ' + FONT;
-    ctx.fillStyle = 'rgba(220,240,255,0.9)';
+    ctx.fillStyle = launchHintT > 0 ? '#ffd166' : 'rgba(220,240,255,0.9)';
     ctx.shadowColor = 'rgba(80,160,255,0.8)'; ctx.shadowBlur = 12;
-    ctx.fillText('按住蓄力 · 松手发射', 470, 1150);
+    var hint = launchHintT > 0 ? launchHintMsg : '按住右侧发射器 ≥1 秒 · 3 秒满力';
+    ctx.fillText(hint, 470, 1150);
+    ctx.restore();
+    var pulse = 0.5 + 0.5 * Math.sin(time * 3);
+    ctx.save();
+    ctx.strokeStyle = 'rgba(120,220,255,' + (0.3 + 0.3 * pulse).toFixed(2) + ')';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(690, 1160, 44 + pulse * 6, 0, TAU); ctx.stroke();
     ctx.restore();
   }
 
@@ -1914,7 +1956,7 @@
       ctx.fillText('最高 ' + bests[i], x + w - 40, y + 94);
     }
     ctx.textAlign = 'center';
-    ctx.font = '500 19px ' + FONT;
+    ctx.font = '500 21px ' + FONT;
     ctx.fillStyle = 'rgba(160,200,240,0.55)';
     ctx.fillText('点卡片开始 · 也可以按 1 / 2 / 3', 360, 880);
     ctx.restore();
@@ -2061,10 +2103,10 @@
     ctx.restore();
 
     ctx.save();
-    ctx.font = '12px ' + FONT;
+    ctx.font = '15px ' + FONT;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillStyle = 'rgba(255,225,160,0.55)';
-    ctx.fillText('太阳', SUN.x, SUN.y + SUN.r + 16);
+    ctx.fillStyle = 'rgba(255,225,160,0.7)';
+    ctx.fillText('太阳', SUN.x, SUN.y + SUN.r + 18);
     ctx.restore();
 
     for (i = 0; i < 3; i++) {
@@ -2092,7 +2134,7 @@
       if (o.id === 'saturn') {
         ctx.save(); ctx.rotate(0.35);
         ctx.strokeStyle = 'rgba(230,210,160,0.55)'; ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.ellipse(0, 0, o.r * 1.9, o.r * 0.6, 0, 0, TAU); ctx.stroke();
+        ctx.beginPath(); ctx.ellipse(0, 0, o.r * 1.5, o.r * 0.6, 0, 0, TAU); ctx.stroke();
         ctx.restore();
       }
       var g = ctx.createRadialGradient(-o.r * 0.35, -o.r * 0.4, o.r * 0.1, 0, 0, o.r * 1.1);
@@ -2118,7 +2160,7 @@
       if (o.hasRing) {
         ctx.save(); ctx.rotate(0.35);
         ctx.strokeStyle = 'rgba(240,220,170,0.75)'; ctx.lineWidth = 2.5;
-        ctx.beginPath(); ctx.ellipse(0, 0, o.r * 2.1, o.r * 0.65, 0, 0, TAU); ctx.stroke();
+        ctx.beginPath(); ctx.ellipse(0, 0, o.r * 1.6, o.r * 0.65, 0, 0, TAU); ctx.stroke();
         ctx.restore();
       }
       if (o.glow > 0) {
@@ -2129,10 +2171,10 @@
       }
       ctx.restore();
       ctx.save();
-      ctx.font = '11px ' + FONT;
+      ctx.font = '14px ' + FONT;
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillStyle = 'rgba(190,220,255,0.55)';
-      ctx.fillText(o.name, p.x, p.y + o.r + 13);
+      ctx.fillStyle = 'rgba(200,228,255,0.75)';
+      ctx.fillText(o.name, p.x, p.y + o.r + 16);
       ctx.restore();
     }
 
@@ -2235,8 +2277,8 @@
     ctx.font = '500 17px ' + FONT;
     ctx.fillStyle = '#dff2ff';
     ctx.fillText(card.text, 360, 171);
-    ctx.font = '400 12px ' + FONT;
-    ctx.fillStyle = 'rgba(160,200,240,0.6)';
+    ctx.font = '400 13px ' + FONT;
+    ctx.fillStyle = 'rgba(160,200,240,0.7)';
     ctx.fillText('真实太阳系比这里大得多', 360, 197);
     ctx.restore();
   }
@@ -2245,8 +2287,8 @@
     if (state === 'menu') return;
     ctx.save();
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.font = '600 18px ' + FONT;
-    ctx.fillStyle = 'rgba(160,210,255,0.72)';
+    ctx.font = '600 20px ' + FONT;
+    ctx.fillStyle = 'rgba(160,210,255,0.85)';
     ctx.fillText('太空小知识 ' + knownCount + '/12', 360, 1240);
     ctx.restore();
   }
@@ -2254,62 +2296,62 @@
   function drawSideDecor() {
     ctx.save();
     ctx.fillStyle = 'rgba(8,20,45,0.9)';
-    rr(ctx, 40, 1040, 110, 120, 10); ctx.fill();
+    rr(ctx, 40, 1040, 110, 150, 10); ctx.fill();
     ctx.strokeStyle = 'rgba(100,190,255,0.45)'; ctx.lineWidth = 1.5; ctx.stroke();
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.font = '700 9px ' + FONT;
-    ctx.fillStyle = 'rgba(190,225,255,0.85)';
-    ctx.fillText('太空笔记', 95, 1052);
+    ctx.font = '700 12px ' + FONT;
+    ctx.fillStyle = 'rgba(190,225,255,0.9)';
+    ctx.fillText('太空笔记', 95, 1055);
     if (lastFact) {
-      ctx.font = '700 12px ' + FONT;
+      ctx.font = '700 16px ' + FONT;
       ctx.fillStyle = '#ffe9a8';
-      ctx.fillText(lastFact.name, 95, 1068);
-      ctx.font = '500 9px ' + FONT;
-      ctx.fillStyle = 'rgba(220,240,255,0.9)';
+      ctx.fillText(lastFact.name, 95, 1075);
+      ctx.font = '500 12px ' + FONT;
+      ctx.fillStyle = 'rgba(225,242,255,0.95)';
       var chars = lastFact.text.split('');
       var line = '', lines = [];
       for (var wi = 0; wi < chars.length; wi++) {
         var test = line + chars[wi];
-        if (ctx.measureText(test).width > 96) { lines.push(line); line = chars[wi]; }
+        if (ctx.measureText(test).width > 100) { lines.push(line); line = chars[wi]; }
         else line = test;
       }
       lines.push(line);
-      for (var li = 0; li < lines.length && li < 3; li++) ctx.fillText(lines[li], 95, 1082 + li * 11);
+      for (var li = 0; li < lines.length && li < 4; li++) ctx.fillText(lines[li], 95, 1094 + li * 14);
     } else {
-      ctx.font = '500 9px ' + FONT;
-      ctx.fillStyle = 'rgba(160,200,240,0.6)';
-      ctx.fillText('撞到天体，', 95, 1076);
-      ctx.fillText('这里会记住它', 95, 1090);
+      ctx.font = '500 12px ' + FONT;
+      ctx.fillStyle = 'rgba(170,210,245,0.7)';
+      ctx.fillText('撞到天体，', 95, 1086);
+      ctx.fillText('这里会记住它', 95, 1102);
     }
     for (var ii = 0; ii < 12; ii++) {
-      var cx2 = 50 + (ii % 6) * 12;
-      var cy2 = 1115 + ((ii / 6) | 0) * 10;
+      var cx2 = 48 + ii * 8.5;
+      var cy2 = 1150;
       var on2 = !!known[FACT_KEYS[ii]];
       ctx.fillStyle = on2 ? FACT_COLORS[ii] : 'rgba(255,255,255,0.12)';
-      ctx.beginPath(); ctx.arc(cx2, cy2, 3, 0, TAU); ctx.fill();
+      ctx.beginPath(); ctx.arc(cx2, cy2, 2.8, 0, TAU); ctx.fill();
     }
-    ctx.font = '600 8px ' + FONT;
-    ctx.fillStyle = 'rgba(160,210,255,0.8)';
-    ctx.fillText('已认识 ' + knownCount + '/12', 95, 1146);
+    ctx.font = '600 10px ' + FONT;
+    ctx.fillStyle = 'rgba(170,215,255,0.85)';
+    ctx.fillText('已认识 ' + knownCount + '/12', 95, 1170);
     ctx.restore();
 
     ctx.save();
     ctx.fillStyle = 'rgba(8,20,45,0.9)';
-    rr(ctx, 550, 1040, 100, 120, 10); ctx.fill();
+    rr(ctx, 550, 1040, 100, 150, 10); ctx.fill();
     ctx.strokeStyle = 'rgba(100,190,255,0.45)'; ctx.lineWidth = 1.5; ctx.stroke();
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.font = '700 9px ' + FONT;
-    ctx.fillStyle = 'rgba(190,225,255,0.85)';
-    ctx.fillText('观测台', 600, 1052);
-    ctx.strokeStyle = '#9fc8ff'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(580, 1110); ctx.lineTo(600, 1078); ctx.lineTo(620, 1110); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(585, 1092); ctx.lineTo(625, 1072); ctx.stroke();
+    ctx.font = '700 12px ' + FONT;
+    ctx.fillStyle = 'rgba(190,225,255,0.9)';
+    ctx.fillText('观测台', 600, 1055);
+    ctx.strokeStyle = '#9fc8ff'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(578, 1130); ctx.lineTo(600, 1090); ctx.lineTo(622, 1130); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(584, 1105); ctx.lineTo(628, 1080); ctx.stroke();
     ctx.fillStyle = '#cfe6ff';
-    ctx.beginPath(); ctx.arc(625, 1072, 4, 0, TAU); ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,0.6)';
-    ctx.beginPath(); ctx.arc(570, 1070, 1.5, 0, TAU); ctx.arc(635, 1100, 1.2, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(628, 1080, 5, 0, TAU); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.65)';
+    ctx.beginPath(); ctx.arc(566, 1078, 2, 0, TAU); ctx.arc(636, 1115, 1.6, 0, TAU); ctx.fill();
     ctx.fillStyle = 'rgba(120,240,190,' + (0.4 + 0.3 * Math.sin(time * 2.4)).toFixed(2) + ')';
-    ctx.beginPath(); ctx.arc(640, 1050, 2.5, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(640, 1050, 3, 0, TAU); ctx.fill();
     ctx.restore();
   }
 
@@ -2347,7 +2389,7 @@
       ctx.fillStyle = correct ? '#eafff2' : (wrong ? '#ffe0e0' : '#dff2ff');
       ctx.fillText(['A. ', 'B. ', 'C. '][i] + q.opts[i], 360, y + 43);
     }
-    ctx.font = '500 18px ' + FONT;
+    ctx.font = '500 20px ' + FONT;
     if (quizFeedback === 1) { ctx.fillStyle = '#7bffb0'; ctx.fillText('答对了！', 360, 830); }
     else if (quizFeedback === 2) { ctx.fillStyle = '#ff9a9a'; ctx.fillText('答错了，正确答案是：' + q.opts[q.a], 360, 830); }
     else { ctx.fillStyle = 'rgba(160,200,240,0.55)'; ctx.fillText('点选项作答 · 也可以按 1 / 2 / 3', 360, 830); }
