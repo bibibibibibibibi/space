@@ -135,9 +135,9 @@
 
   /* ================= 难度 ================= */
   var DIFFS = [
-    { name: '慢速', stars: 1, desc: '球速慢', grav: 520, maxFall: 480, maxSpeed: 900, launch: 900, bump: 520, spring: 640, color: '#5ee08a' },
-    { name: '标准', stars: 2, desc: '球速标准', grav: 680, maxFall: 600, maxSpeed: 1100, launch: 1080, bump: 580, spring: 720, color: '#5fb6ff' },
-    { name: '高速', stars: 3, desc: '球速快', grav: 860, maxFall: 720, maxSpeed: 1300, launch: 1260, bump: 640, spring: 800, color: '#ff8a5c' }
+    { name: '慢速', stars: 1, desc: '球速慢', grav: 520, maxFall: 480, maxSpeed: 950, launch: 900, bump: 560, spring: 680, color: '#5ee08a' },
+    { name: '标准', stars: 2, desc: '球速标准', grav: 700, maxFall: 650, maxSpeed: 1200, launch: 1100, bump: 780, spring: 920, color: '#5fb6ff' },
+    { name: '高速', stars: 3, desc: '球速快 · 碰撞猛', grav: 900, maxFall: 800, maxSpeed: 1600, launch: 1300, bump: 1150, spring: 1350, color: '#ff8a5c' }
   ];
 
   var state = 'menu';
@@ -153,17 +153,19 @@
   var CHEER_DUR = 2.0;
   var PHRASES = ['太棒了！', '好厉害！', '你真棒！', '继续加油！', '小天才！', '哇——！', '漂亮！'];
 
-  var SUN = { x: 360, y: 400, r: 58, cool: 0, glow: 0, freq: 262 };
+  var SUN = { x: 345, y: 340, r: 58, cool: 0, glow: 0, freq: 262 };
   var ORBITERS = [
-    { id: 'mercury', name: '水星', a: 127, b: 135, angle: 0.5, speed: 0.62, r: 15, c1: '#e8e8e8', c2: '#8a8a8a', freq: 523, cool: 0, glow: 0 },
-    { id: 'venus', name: '金星', a: 148, b: 160, angle: 2.2, speed: 0.48, r: 18, c1: '#fff0c0', c2: '#d9a441', freq: 587, cool: 0, glow: 0 },
-    { id: 'earth', name: '地球', a: 180, b: 195, angle: 3.8, speed: 0.36, r: 22, c1: '#7fe0ff', c2: '#2f7bff', freq: 659, cool: 0, glow: 0 },
-    { id: 'mars', name: '火星', a: 212, b: 230, angle: 5.3, speed: 0.29, r: 17, c1: '#ffb07a', c2: '#c1440e', freq: 698, cool: 0, glow: 0 },
-    { id: 'jupiter', name: '木星', a: 247, b: 270, angle: 1.4, speed: 0.22, r: 28, c1: '#ffe0b0', c2: '#c98a5a', bands: true, freq: 784, cool: 0, glow: 0 },
-    { id: 'saturn', name: '土星', a: 265, b: 305, angle: 4.6, speed: 0.17, r: 22, c1: '#ffe9b0', c2: '#d8b26a', hasRing: true, freq: 880, cool: 0, glow: 0 }
+    { id: 'mercury', name: '水星', a: 127, b: 135, angle: 0.5, speed: 0.62, r: 20, c1: '#e8e8e8', c2: '#8a8a8a', freq: 523, cool: 0, glow: 0 },
+    { id: 'venus', name: '金星', a: 150, b: 165, angle: 2.2, speed: 0.48, r: 23, c1: '#fff0c0', c2: '#d9a441', freq: 587, cool: 0, glow: 0 },
+    { id: 'earth', name: '地球', a: 173, b: 195, angle: 3.8, speed: 0.36, r: 29, c1: '#7fe0ff', c2: '#2f7bff', freq: 659, cool: 0, glow: 0 },
+    { id: 'mars', name: '火星', a: 196, b: 225, angle: 5.3, speed: 0.29, r: 22, c1: '#ffb07a', c2: '#c1440e', freq: 698, cool: 0, glow: 0 },
+    { id: 'jupiter', name: '木星', a: 219, b: 255, angle: 1.4, speed: 0.22, r: 36, c1: '#ffe0b0', c2: '#c98a5a', bands: true, freq: 784, cool: 0, glow: 0 },
+    { id: 'saturn', name: '土星', a: 242, b: 285, angle: 4.6, speed: 0.17, r: 29, c1: '#ffe9b0', c2: '#d8b26a', hasRing: true, freq: 880, cool: 0, glow: 0 },
+    { id: 'uranus', name: '天王星', a: 265, b: 315, angle: 2.9, speed: 0.13, r: 26, c1: '#bff5ef', c2: '#5fb8c9', freq: 932, cool: 0, glow: 0 },
+    { id: 'neptune', name: '海王星', a: 279, b: 325, angle: 5.8, speed: 0.10, r: 26, c1: '#8fb8ff', c2: '#2f4fd8', freq: 1046, cool: 0, glow: 0 }
   ];
-  var moon = { orbit: 40, angle: 0.2, speed: 2.2, r: 8, cool: 0, glow: 0 };
-  var sat = { orbit: 58, angle: 2.4, speed: 1.4, r: 6, cool: 0, glow: 0 };
+  var moon = { orbit: 46, angle: 0.2, speed: 2.2, r: 8, cool: 0, glow: 0 };
+  var sat = { orbit: 64, angle: 2.4, speed: 1.4, r: 6, cool: 0, glow: 0 };
   var voyager = { x: -70, y: 170, vx: 26, r: 15, cool: 0, glow: 0 };
   var alien = { x: 480, y: 780, vx: 26, phase: 0, r: 24, cool: 0, glow: 0 };
   var alien2 = { x: 250, y: 620, vx: 22, phase: 1.1, r: 20, cool: 0, glow: 0 };
@@ -176,6 +178,8 @@
   var known = {}, knownCount = 0, card = null, cardT = 0, lastFact = null;
   var quizUsed = false, quizList = [], quizIndex = 0, quizCorrect = 0, quizSel = 0, quizFeedback = 0, quizNextT = 0;
   var launchHintT = 0, launchHintMsg = '', chargeTime = 0;
+  var combo = 0, comboT = 0, comboCelebrated = false, celebrateCd = 0, lightT = 0, lightMode = 0;
+  var fast300 = false, fastQuiz = false;
   var FACTS = {
     sun: { name: '太阳', text: '太阳是一颗恒星，给地球光和热。' },
     mercury: { name: '水星', text: '离太阳最近，白天很热，晚上很冷。' },
@@ -188,16 +192,18 @@
     satellite: { name: '人造卫星', text: '人类发射的航天器，用来通信、导航、看天气。' },
     voyager: { name: '旅行者号', text: '飞得最远的人造探测器，带着地球的问候。' },
     alien: { name: '外星小怪物', text: '目前还没发现外星生命，这是游戏里的想象。' },
-    meteor: { name: '流星', text: '太空小石块冲进大气层发光；游戏里的球就是一颗小流星。' }
+    meteor: { name: '流星', text: '太空小石块冲进大气层发光；游戏里的球就是一颗小流星。' },
+    uranus: { name: '天王星', text: '一颗淡蓝绿色的冰巨星，它是“躺着”自转的。' },
+    neptune: { name: '海王星', text: '离太阳最远的行星，深蓝色，风速非常快。' }
   };
-  var FACT_KEYS = ['sun', 'mercury', 'venus', 'earth', 'moon', 'mars', 'jupiter', 'saturn', 'satellite', 'voyager', 'alien', 'meteor'];
-  var FACT_COLORS = ['#ffd166', '#cfcfcf', '#ffe0a0', '#7fe0ff', '#d8d8e0', '#ff9a6a', '#ffcf9a', '#ffe9b0', '#9fc8ff', '#d8e8ff', '#7bffb0', '#ffd166'];
+  var FACT_KEYS = ['sun', 'mercury', 'venus', 'earth', 'moon', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'satellite', 'voyager', 'alien', 'meteor'];
+  var FACT_COLORS = ['#ffd166', '#cfcfcf', '#ffe0a0', '#7fe0ff', '#d8d8e0', '#ff9a6a', '#ffcf9a', '#ffe9b0', '#9fe8e0', '#5f8fff', '#9fc8ff', '#d8e8ff', '#7bffb0', '#ffd166'];
   var belt = {
-    cx: 360, cy: 500, a: 229, b: 250,
+    cx: 360, cy: 440, a: 229, b: 250,
     rocks: [
-      { x: 164, y: 371, r: 9, cool: 0, glow: 0 },
-      { x: 571, y: 597, r: 9, cool: 0, glow: 0 },
-      { x: 138, y: 560, r: 9, cool: 0, glow: 0 }
+      { x: 164, y: 311, r: 9, cool: 0, glow: 0 },
+      { x: 571, y: 537, r: 9, cool: 0, glow: 0 },
+      { x: 138, y: 500, r: 9, cool: 0, glow: 0 }
     ]
   };
   var QUIZ_BANK = [
@@ -215,7 +221,9 @@
     { q: '流星是什么？', opts: ['太空小石块冲进大气层发光', '会自己发光的星星', '一种行星'], a: 0 },
     { q: '太阳给地球带来什么？', opts: ['光和热', '雨水', '空气'], a: 0 },
     { q: '月球自己会发光吗？', opts: ['不会，反射太阳光', '会', '只在晚上会'], a: 0 },
-    { q: '水星白天和晚上有什么不同？', opts: ['白天很热，晚上很冷', '一直很热', '一直很冷'], a: 0 }
+    { q: '水星白天和晚上有什么不同？', opts: ['白天很热，晚上很冷', '一直很热', '一直很冷'], a: 0 },
+    { q: '天王星有什么特别？', opts: ['躺着转', '最热', '有最大的火山'], a: 0 },
+    { q: '离太阳最远的行星是？', opts: ['海王星', '天王星', '土星'], a: 0 }
   ];
 
   var ball = { x: 690, y: 1160, vx: 0, vy: 0, active: false, trail: [], stuck: 0 };
@@ -244,11 +252,25 @@
       master.connect(audioCtx.destination);
       startMusic();
     }
-    if (audioCtx.state === 'suspended') audioCtx.resume();
+    if (audioCtx.state !== 'running') {
+      try {
+        var p = audioCtx.resume();
+        if (p && p.catch) p.catch(function () {});
+      } catch (e) {}
+    }
   }
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden && audioCtx && audioCtx.state !== 'running') {
+      try {
+        var p = audioCtx.resume();
+        if (p && p.catch) p.catch(function () {});
+      } catch (e) {}
+    }
+  });
   function toggleMute() {
     muted = !muted;
     if (master && audioCtx) master.gain.setTargetAtTime(muted ? 0 : 0.55, audioCtx.currentTime, 0.02);
+    if (muted && window.speechSynthesis) { try { window.speechSynthesis.cancel(); } catch (e) {} }
     try { localStorage.setItem('spacePinball.muted', muted ? '1' : '0'); } catch (e) {}
   }
   function tone(freq, dur, type, vol, slideTo, delay) {
@@ -531,6 +553,7 @@
   window.addEventListener('keydown', function (e) {
     var k = e.key;
     if (k === 'm' || k === 'M') { e.preventDefault(); toggleMute(); return; }
+    if (k === 'l' || k === 'L') { e.preventDefault(); lightT = 2.5; lightMode = (lightMode + 1) % 3; return; }
     if (state === 'quiz') {
       if (k === '1' || k === '2' || k === '3') { e.preventDefault(); answerQuiz(parseInt(k, 10) - 1); }
       return;
@@ -633,6 +656,7 @@
       nextFirework = Math.floor(score / 100) * 100 + 100;
       fireworks();
     }
+    if (diff === 2 && !fast300 && score >= 300) { fast300 = true; celebrate('fast300'); }
   }
   function burst(x, y, color, n, power) {
     for (var i = 0; i < n; i++) {
@@ -658,6 +682,8 @@
       })(i);
     }
     showCheer(); playChime();
+    lightT = 3.5;
+    lightMode = (lightMode + 1) % 3;
   }
 
   /* ================= 关卡 ================= */
@@ -673,7 +699,7 @@
   }
   function resetEntities() {
     var i;
-    var startAngles = [0.5, 2.2, 3.8, 5.3, 1.4, 4.6];
+    var startAngles = [0.5, 2.2, 3.8, 5.3, 1.4, 4.6, 2.9, 5.8];
     for (i = 0; i < ORBITERS.length; i++) {
       ORBITERS[i].angle = startAngles[i];
       ORBITERS[i].cool = 0; ORBITERS[i].glow = 0;
@@ -706,8 +732,10 @@
     tone(320, 0.18, 'sine', 0.04, 420);
   }
   function startGame(i) {
+    initAudio();
     diff = i; menuSel = i; D = DIFFS[i];
     lives = 3; score = 0; nextFirework = 100; scorePop = 0; newRecord = false; respawnTimer = 0; quizUsed = false;
+    combo = 0; comboT = 0; comboCelebrated = false; celebrateCd = 0; lightT = 0; lightMode = 0; fast300 = false; fastQuiz = false;
     resetEntities(); toReady(); playChime();
   }
   function toMenu() {
@@ -771,6 +799,36 @@
     cheerText = '续命成功！'; cheerT = 2.2;
     playChime();
     burst(360, 400, '#ffd166', 30, 360);
+    if (diff === 2 && !fastQuiz) { fastQuiz = true; celebrate('fastQuiz'); }
+  }
+  function addCombo() {
+    if (comboT > 0) combo++;
+    else { combo = 1; comboCelebrated = false; }
+    comboT = 2.5;
+    if (combo >= 10 && !comboCelebrated && celebrateCd <= 0) {
+      comboCelebrated = true;
+      celebrate('combo');
+    }
+  }
+  function celebrate(kind) {
+    lightT = 3.5;
+    lightMode = (lightMode + 1) % 3;
+    celebrateCd = 3;
+    fireworks();
+    speakPraise(cheerText);
+  }
+  function speakPraise(text) {
+    if (muted) return;
+    if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
+    try {
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = 'zh-CN';
+      u.rate = 0.9;
+      u.pitch = 1.1;
+      u.volume = 0.8;
+      window.speechSynthesis.speak(u);
+    } catch (e) {}
   }
   function startLaunch(power) {
     if (state !== 'ready') return;
@@ -865,8 +923,10 @@
       var j = -(1 + e) * vn;
       ball.vx += j * nx; ball.vy += j * ny;
       if (f.pressed && ny < -0.15) {
-        ball.vx += nx * 180; ball.vy += ny * 180;
-        if (ball.vy > -320) ball.vy = -320;
+        var boost = 180 * (diff === 2 ? 1.3 : 1);
+        ball.vx += nx * boost; ball.vy += ny * boost;
+        var minUp = -320 * (diff === 2 ? 1.15 : 1);
+        if (ball.vy > minUp) ball.vy = minUp;
         ball.vx += rand(-40, 40);
       }
     }
@@ -931,6 +991,7 @@
       s.cool = 0.16; s.glow = 1;
       playBoing();
       burst(ball.x, ball.y, '#9fe4ff', 10, 260);
+      addCombo();
     }
   }
   function collideStar(s) {
@@ -1014,7 +1075,7 @@
       ball.vx -= (strong ? 1.95 : 1.6) * vn * nx;
       ball.vy -= (strong ? 1.95 : 1.6) * vn * ny;
       var sp = Math.hypot(ball.vx, ball.vy) || 1;
-      var target = Math.max(sp, strong ? 760 : D.bump);
+      var target = Math.max(sp, strong ? Math.max(760, D.bump) : D.bump);
       ball.vx = ball.vx / sp * target;
       ball.vy = ball.vy / sp * target;
     }
@@ -1026,6 +1087,7 @@
         playDing(freq);
         burst(x, y, strong ? '#ffe08a' : '#b6f0ff', strong ? 16 : 9, 250);
         learn(id);
+        addCombo();
       }
     }
     return true;
@@ -1088,10 +1150,6 @@
     collideVoyager();
     collideAlien();
     collideMeteors();
-    for (var bri = 0; bri < belt.rocks.length; bri++) {
-      var brr = belt.rocks[bri];
-      bodyHit(brr.x, brr.y, brr.r, 'rock', 660, 5, false, brr);
-    }
     for (var wi = 0; wi < springs.length; wi++) collideSpring(springs[wi]);
 
     var sp2 = Math.hypot(ball.vx, ball.vy);
@@ -1158,6 +1216,9 @@
     for (i = 0; i < belt.rocks.length; i++) { belt.rocks[i].cool = Math.max(0, belt.rocks[i].cool - dt); belt.rocks[i].glow = Math.max(0, belt.rocks[i].glow - dt * 2.6); }
     if (cardT > 0) cardT -= dt;
     if (launchHintT > 0) launchHintT -= dt;
+    if (comboT > 0) { comboT -= dt; if (comboT <= 0) { combo = 0; comboCelebrated = false; } }
+    if (celebrateCd > 0) celebrateCd -= dt;
+    if (lightT > 0) lightT -= dt;
     if (scorePop > 0) scorePop -= dt;
     if (cheerT > 0) cheerT -= dt;
     if (padToastT > 0) padToastT -= dt;
@@ -1385,7 +1446,7 @@
     for (var ri = 0; ri < 36; ri++) {
       var ra = Math.random() * TAU;
       var rx = 360 + Math.cos(ra) * 229;
-      var ry = 500 + Math.sin(ra) * 250;
+      var ry = 440 + Math.sin(ra) * 250;
       var rs = 1 + Math.random() * 2.2;
       b.fillStyle = 'rgba(200,210,225,' + (0.25 + Math.random() * 0.35).toFixed(2) + ')';
       b.beginPath(); b.arc(rx, ry, rs, 0, TAU); b.fill();
@@ -1393,18 +1454,18 @@
     b.fillStyle = 'rgba(160,200,255,0.35)';
     b.font = '14px "PingFang SC","Microsoft YaHei",sans-serif';
     b.textAlign = 'center';
-    b.fillText('小行星带', 520, 690);
+    b.fillText('小行星带', 520, 630);
 
     for (var ki = 0; ki < 26; ki++) {
       var ka = Math.random() * TAU;
       var kx = 360 + Math.cos(ka) * 285;
-      var ky = 545 + Math.sin(ka) * 320;
+      var ky = 485 + Math.sin(ka) * 320;
       var ks = 0.8 + Math.random() * 1.2;
       b.fillStyle = 'rgba(180,225,255,' + (0.2 + Math.random() * 0.3).toFixed(2) + ')';
       b.beginPath(); b.arc(kx, ky, ks, 0, TAU); b.fill();
     }
     b.fillStyle = 'rgba(160,200,255,0.3)';
-    b.fillText('柯伊伯带', 520, 875);
+    b.fillText('柯伊伯带', 520, 815);
 
     var vg = b.createRadialGradient(W / 2, H / 2, 300, W / 2, H / 2, 900);
     vg.addColorStop(0, 'rgba(0,0,0,0)');
@@ -2075,7 +2136,7 @@
     ctx.strokeStyle = 'rgba(120,180,255,0.07)';
     ctx.lineWidth = 1;
     ctx.setLineDash([4, 8]);
-    ctx.beginPath(); ctx.ellipse(360, 500, 229, 250, 0, 0, TAU); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(360, 440, 229, 250, 0, 0, TAU); ctx.stroke();
     ctx.setLineDash([]);
 
     ctx.save();
@@ -2289,7 +2350,7 @@
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.font = '600 20px ' + FONT;
     ctx.fillStyle = 'rgba(160,210,255,0.85)';
-    ctx.fillText('太空小知识 ' + knownCount + '/12', 360, 1240);
+    ctx.fillText('太空小知识 ' + knownCount + '/14', 360, 1240);
     ctx.restore();
   }
 
@@ -2323,16 +2384,16 @@
       ctx.fillText('撞到天体，', 95, 1086);
       ctx.fillText('这里会记住它', 95, 1102);
     }
-    for (var ii = 0; ii < 12; ii++) {
-      var cx2 = 48 + ii * 8.5;
+    for (var ii = 0; ii < 14; ii++) {
+      var cx2 = 47 + ii * 7.5;
       var cy2 = 1150;
       var on2 = !!known[FACT_KEYS[ii]];
       ctx.fillStyle = on2 ? FACT_COLORS[ii] : 'rgba(255,255,255,0.12)';
-      ctx.beginPath(); ctx.arc(cx2, cy2, 2.8, 0, TAU); ctx.fill();
+      ctx.beginPath(); ctx.arc(cx2, cy2, 2.6, 0, TAU); ctx.fill();
     }
     ctx.font = '600 10px ' + FONT;
     ctx.fillStyle = 'rgba(170,215,255,0.85)';
-    ctx.fillText('已认识 ' + knownCount + '/12', 95, 1170);
+    ctx.fillText('已认识 ' + knownCount + '/14', 95, 1170);
     ctx.restore();
 
     ctx.save();
@@ -2343,13 +2404,82 @@
     ctx.font = '700 12px ' + FONT;
     ctx.fillStyle = 'rgba(190,225,255,0.9)';
     ctx.fillText('观测台', 600, 1055);
+
+    ctx.save();
+    ctx.translate(572, 1082);
+    ctx.fillStyle = '#ffe9a8';
+    ctx.strokeStyle = '#5a4318'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(0, 0, 8, 0, TAU); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = 'rgba(8,20,45,0.95)';
+    ctx.beginPath(); ctx.arc(4, -2, 7, 0, TAU); ctx.fill();
+    ctx.restore();
+
+    var starPts = [[634, 1072, 4], [644, 1108, 3], [560, 1115, 3], [620, 1180, 2.5]];
+    for (var si = 0; si < starPts.length; si++) {
+      ctx.save(); ctx.translate(starPts[si][0], starPts[si][1]);
+      starPath(ctx, 0, 0, starPts[si][2], 0);
+      ctx.fillStyle = '#ffe9a8'; ctx.fill();
+      ctx.restore();
+    }
+
+    ctx.save();
+    ctx.strokeStyle = '#0a1a33'; ctx.lineWidth = 2;
+    ctx.fillStyle = '#9fc8ff';
+    rr(ctx, 559, 1142, 7, 15, 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#eef8ff';
+    rr(ctx, 564, 1140, 15, 20, 6); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = '#9fc8ff'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(568, 1158); ctx.lineTo(565, 1170); ctx.moveTo(576, 1158); ctx.lineTo(579, 1170); ctx.stroke();
+    ctx.fillStyle = '#ffd166'; ctx.strokeStyle = '#0a1a33'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.ellipse(564, 1172, 4, 2.5, 0, 0, TAU); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(580, 1172, 4, 2.5, 0, 0, TAU); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = '#eef8ff'; ctx.lineWidth = 4.5; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(564, 1146); ctx.lineTo(556, 1132); ctx.stroke();
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.arc(555, 1130, 3.2, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#0a1a33'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(572, 1129, 11, 0, TAU); ctx.fill(); ctx.stroke();
+    var vg = ctx.createLinearGradient(565, 1124, 579, 1136);
+    vg.addColorStop(0, '#7fe0ff'); vg.addColorStop(1, '#2f7bff');
+    ctx.fillStyle = vg;
+    ctx.beginPath(); ctx.ellipse(572, 1130, 7.5, 6, 0.1, 0, TAU); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    ctx.beginPath(); ctx.ellipse(569, 1127, 2.2, 1.5, -0.4, 0, TAU); ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.strokeStyle = '#0a1a33'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(604, 1136); ctx.lineTo(588, 1170); ctx.moveTo(604, 1136); ctx.lineTo(620, 1170); ctx.moveTo(604, 1136); ctx.lineTo(604, 1176); ctx.stroke();
     ctx.strokeStyle = '#9fc8ff'; ctx.lineWidth = 2.5;
-    ctx.beginPath(); ctx.moveTo(578, 1130); ctx.lineTo(600, 1090); ctx.lineTo(622, 1130); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(584, 1105); ctx.lineTo(628, 1080); ctx.stroke();
-    ctx.fillStyle = '#cfe6ff';
-    ctx.beginPath(); ctx.arc(628, 1080, 5, 0, TAU); ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,0.65)';
-    ctx.beginPath(); ctx.arc(566, 1078, 2, 0, TAU); ctx.arc(636, 1115, 1.6, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(604, 1136); ctx.lineTo(588, 1170); ctx.moveTo(604, 1136); ctx.lineTo(620, 1170); ctx.moveTo(604, 1136); ctx.lineTo(604, 1176); ctx.stroke();
+    ctx.strokeStyle = '#0a1a33'; ctx.lineWidth = 18;
+    ctx.beginPath(); ctx.moveTo(604, 1132); ctx.lineTo(629, 1087); ctx.stroke();
+    var tg = ctx.createLinearGradient(604, 1132, 629, 1087);
+    tg.addColorStop(0, '#7fe0ff'); tg.addColorStop(1, '#2f7bff');
+    ctx.strokeStyle = tg; ctx.lineWidth = 14;
+    ctx.beginPath(); ctx.moveTo(604, 1132); ctx.lineTo(629, 1087); ctx.stroke();
+    ctx.fillStyle = '#0a1a33';
+    ctx.beginPath(); ctx.arc(632, 1083, 10, 0, TAU); ctx.fill();
+    var lg = ctx.createRadialGradient(629, 1080, 2, 632, 1083, 7);
+    lg.addColorStop(0, '#ffffff'); lg.addColorStop(0.5, '#9fe8ff'); lg.addColorStop(1, '#2f7bff');
+    ctx.fillStyle = lg;
+    ctx.beginPath(); ctx.arc(632, 1083, 7, 0, TAU); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.beginPath(); ctx.arc(629, 1080, 2.4, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#ffd166'; ctx.strokeStyle = '#0a1a33'; ctx.lineWidth = 1.5;
+    rr(ctx, 595, 1136, 15, 8, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#ffd166'; ctx.strokeStyle = '#0a1a33'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(604, 1136, 5, 0, TAU); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.arc(614, 1106, 2.6, 0, TAU); ctx.arc(621, 1100, 2.6, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#0a1a33';
+    ctx.beginPath(); ctx.arc(614.5, 1106, 1.1, 0, TAU); ctx.arc(621.5, 1100, 1.1, 0, TAU); ctx.fill();
+    ctx.strokeStyle = '#0a1a33'; ctx.lineWidth = 1.5; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.arc(617.5, 1103, 3.2, 0.25, Math.PI - 0.25); ctx.stroke();
+    ctx.strokeStyle = '#ffe9a8'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(640, 1070); ctx.lineTo(640, 1076); ctx.moveTo(637, 1073); ctx.lineTo(643, 1073); ctx.stroke();
+    ctx.restore();
+
     ctx.fillStyle = 'rgba(120,240,190,' + (0.4 + 0.3 * Math.sin(time * 2.4)).toFixed(2) + ')';
     ctx.beginPath(); ctx.arc(640, 1050, 3, 0, TAU); ctx.fill();
     ctx.restore();
@@ -2396,6 +2526,90 @@
     ctx.restore();
   }
 
+  function drawCombo() {
+    if (state !== 'playing' || comboT <= 0 || combo < 2) return;
+    ctx.save();
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    var a = Math.min(1, comboT / 0.4);
+    ctx.globalAlpha = a;
+    ctx.font = '800 24px ' + FONT;
+    ctx.fillStyle = combo >= 10 ? '#ffe066' : '#9fe8ff';
+    ctx.shadowColor = combo >= 10 ? 'rgba(255,200,80,0.8)' : 'rgba(80,180,255,0.8)';
+    ctx.shadowBlur = 14;
+    ctx.fillText('连击 x' + combo, 360, 240);
+    ctx.restore();
+  }
+
+  function drawLightStrips() {
+    var active = lightT > 0;
+    var fade = active ? Math.min(1, (3.5 - lightT) / 0.25) * Math.min(1, lightT / 0.5) : 0;
+    if (fade < 0) fade = 0;
+    var i, x, y, w, h, col, a;
+    ctx.save();
+    if (!active || fade <= 0.01) {
+      ctx.fillStyle = 'rgba(70,110,170,0.3)';
+      for (i = 0; i < 16; i++) {
+        if (i < 6) { x = 56 + i * 100; y = 102; w = 86; h = 9; }
+        else if (i < 10) { x = 42; y = 120 + (i - 6) * 210; w = 9; h = 190; }
+        else if (i < 14) { x = 649; y = 120 + (i - 10) * 210; w = 9; h = 190; }
+        else { x = 250 + (i - 14) * 120; y = 1191; w = 86; h = 9; }
+        rr(ctx, x, y, w, h, 3); ctx.fill();
+      }
+      ctx.strokeStyle = 'rgba(70,110,170,0.25)';
+      ctx.lineWidth = 3;
+      rr(ctx, 42, 102, 636, 1098, 18); ctx.stroke();
+      ctx.restore();
+      return;
+    }
+    for (i = 0; i < 16; i++) {
+      if (i < 6) { x = 56 + i * 100; y = 102; w = 86; h = 9; }
+      else if (i < 10) { x = 42; y = 120 + (i - 6) * 210; w = 9; h = 190; }
+      else if (i < 14) { x = 649; y = 120 + (i - 10) * 210; w = 9; h = 190; }
+      else { x = 250 + (i - 14) * 120; y = 1191; w = 86; h = 9; }
+      if (lightMode === 0) {
+        col = 'hsl(' + ((i * 22 + time * 120) % 360) + ',100%,62%)';
+        a = 0.95 * fade;
+      } else if (lightMode === 1) {
+        col = 'hsl(190,100%,65%)';
+        a = (0.55 + 0.4 * (0.5 + 0.5 * Math.sin(time * 4 - i * 0.4))) * fade;
+      } else {
+        col = 'hsl(45,100%,62%)';
+        a = (0.55 + 0.4 * (0.5 + 0.5 * Math.sin(time * 2.5 + i * 0.25))) * fade;
+      }
+      ctx.globalAlpha = Math.min(1, a);
+      ctx.shadowColor = col;
+      ctx.shadowBlur = 18;
+      ctx.fillStyle = col;
+      rr(ctx, x, y, w, h, 3); ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = 1;
+    }
+    var borderCol = lightMode === 0 ? 'hsl(' + ((time * 80) % 360) + ',100%,65%)' : (lightMode === 1 ? 'hsl(190,100%,65%)' : 'hsl(45,100%,62%)');
+    ctx.globalAlpha = 0.85 * fade;
+    ctx.strokeStyle = borderCol;
+    ctx.shadowColor = borderCol;
+    ctx.shadowBlur = 20;
+    ctx.lineWidth = 3.5;
+    rr(ctx, 42, 102, 636, 1098, 18); ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+
+  function drawSoundHint() {
+    var msg = '';
+    if (muted) msg = '声音已关闭，点右上角开启';
+    else if (!audioCtx || audioCtx.state !== 'running') msg = '点一下屏幕开启声音';
+    if (!msg) return;
+    ctx.save();
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = '600 16px ' + FONT;
+    ctx.fillStyle = 'rgba(255,210,120,0.95)';
+    ctx.shadowColor = 'rgba(255,160,60,0.7)'; ctx.shadowBlur = 10;
+    ctx.fillText(msg, 360, 950);
+    ctx.restore();
+  }
+
   function render() {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     var pg = ctx.createRadialGradient(viewW / 2, viewH / 2, 40, viewW / 2, viewH / 2, Math.max(viewW, viewH) * 0.8);
@@ -2414,11 +2628,13 @@
     drawSprings();
     drawSolar();
     drawSideDecor();
+    drawLightStrips();
     drawFlippers();
     drawBall();
     drawParticles();
     drawFloaters();
     drawHUD();
+    drawCombo();
     drawKnowledgeCard();
     drawProgress();
     drawPadIcon();
@@ -2427,6 +2643,7 @@
     if (state === 'menu') drawMenu();
     if (state === 'over') drawOver();
     if (state === 'quiz') drawQuiz();
+    drawSoundHint();
     drawPadToast();
     drawMute();
   }
