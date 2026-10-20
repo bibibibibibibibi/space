@@ -23,6 +23,17 @@
   #install-hint { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 14px); transform: translateX(-50%); z-index: 40; display: none; align-items: center; gap: 10px; box-sizing: border-box; max-width: 92vw; padding: 10px 14px; border: 1px solid rgba(120, 200, 255, 0.35); border-radius: 14px; background: rgba(10, 22, 50, 0.92); color: #dff2ff; font-family: "PingFang SC", "Microsoft YaHei", sans-serif; font-size: 14px; }
   #install-hint.show { display: flex; }
   #install-hint button { flex: none; width: 26px; height: 26px; padding: 0; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.12); color: #dff2ff; font-size: 18px; line-height: 1; }
+  #name-overlay .name-card { width: min(88vw, 440px); box-sizing: border-box; padding: 22px; border: 1px solid rgba(110, 200, 255, 0.35); border-radius: 20px; background: #0b1730; box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55); text-align: left; }
+  #name-overlay .name-title { font-size: 26px; font-weight: 800; text-align: center; color: #eaf7ff; }
+  #name-overlay .name-sub { margin-top: 6px; font-size: 14px; text-align: center; color: rgba(180, 215, 255, 0.7); }
+  #name-overlay .name-list { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 16px 0 4px; }
+  #name-overlay .name-chip { border: 1px solid rgba(120, 200, 255, 0.35); border-radius: 999px; padding: 7px 14px; background: rgba(80, 180, 255, 0.12); color: #cfeaff; font-size: 15px; font-weight: 600; -webkit-appearance: none; }
+  #name-overlay .name-chip:active { background: rgba(80, 180, 255, 0.28); }
+  #name-overlay #name-input { display: block; width: 100%; box-sizing: border-box; margin-top: 14px; padding: 12px 14px; border: 1.5px solid rgba(120, 200, 255, 0.5); border-radius: 12px; background: rgba(0, 0, 0, 0.28); color: #ffffff; font-size: 22px; outline: none; -webkit-appearance: none; }
+  #name-overlay #name-input:focus { border-color: #7fe0ff; box-shadow: 0 0 0 3px rgba(80, 180, 255, 0.2); }
+  #name-overlay .name-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 16px; }
+  #name-overlay .name-btn { border: 0; border-radius: 999px; padding: 11px 24px; font-size: 16px; font-weight: 700; color: #062038; background: linear-gradient(135deg, #7fe0ff, #3f9bff); -webkit-appearance: none; }
+  #name-overlay .name-btn.ghost { border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(255, 255, 255, 0.1); color: #dff2ff; }
 </style>
 </head>
 <body>
@@ -32,6 +43,18 @@
   <div class="big">请把 iPad 竖过来</div>
   <div class="sub">这个弹球台是 9:16 竖屏的，竖着拿更好玩</div>
   <button id="rotate-close" type="button">仍然继续</button>
+</div>
+<div id="name-overlay" class="overlay">
+  <div class="name-card">
+    <div class="name-title">谁在玩？</div>
+    <div class="name-sub">同一个 iPad 上，每个人一个名字</div>
+    <div id="name-list" class="name-list"></div>
+    <input id="name-input" type="text" maxlength="8" placeholder="输入名字（最多 8 个字）" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done">
+    <div class="name-actions">
+      <button id="name-cancel" class="name-btn ghost" type="button">取消</button>
+      <button id="name-ok" class="name-btn" type="button">确定</button>
+    </div>
+  </div>
 </div>
 <div id="install-hint">
   <span>点「分享」→「添加到主屏幕」，就能像 App 一样玩</span>
@@ -113,7 +136,7 @@
     { x: 690, y: 1160 },
     { x: 690, y: 800 },
     { x: 690, y: 280 },
-    { x: 660, y: 280 }
+    { x: 600, y: 250 }
   ];
 
   function pipeAt(t) {
@@ -132,6 +155,29 @@
     var l = Math.hypot(x, y) || 1;
     return { x: x / l, y: y / l };
   }
+  var pipeLen = 0, pipeSamples = [];
+  (function () {
+    var N = 80, prev = pipeAt(0), total = 0;
+    pipeSamples.push({ t: 0, len: 0 });
+    for (var i = 1; i <= N; i++) {
+      var p = pipeAt(i / N);
+      total += Math.hypot(p.x - prev.x, p.y - prev.y);
+      pipeSamples.push({ t: i / N, len: total });
+      prev = p;
+    }
+    pipeLen = total;
+  })();
+  function pipeAtArc(u) {
+    var target = clamp(u, 0, 1) * pipeLen;
+    for (var i = 1; i < pipeSamples.length; i++) {
+      if (pipeSamples[i].len >= target) {
+        var a = pipeSamples[i - 1], b = pipeSamples[i];
+        var t = a.t + (b.t - a.t) * ((target - a.len) / Math.max(0.0001, b.len - a.len));
+        return pipeAt(t);
+      }
+    }
+    return pipeAt(1);
+  }
 
   /* ================= 难度 ================= */
   var DIFFS = [
@@ -144,7 +190,7 @@
   var diff = 1, D = DIFFS[1];
   var lives = 3, score = 0, nextFirework = 100, scorePop = 0;
   var charge = 0, charging = false, chargePhase = 0, chargePointer = -1;
-  var launchT = 0, launchPow = 0;
+  var launchT = 0, launchPow = 0, launchDur = 0.5;
   var readyTimer = 0, respawnTimer = 0;
   var newRecord = false, bests = [0, 0, 0], menuSel = 1;
   var time = 0;
@@ -226,7 +272,7 @@
     { q: '离太阳最远的行星是？', opts: ['海王星', '天王星', '土星'], a: 0 }
   ];
 
-  var ball = { x: 690, y: 1160, vx: 0, vy: 0, active: false, trail: [], stuck: 0 };
+  var ball = { x: 690, y: 1160, vx: 0, vy: 0, active: false, trail: [], stuck: 0, grace: 0, boost: 0, boostSp: 0 };
 
   /* ================= 最高分 ================= */
   function bestKey(d) { return 'spacePinball.best.' + d; }
@@ -237,6 +283,126 @@
     try { localStorage.setItem(bestKey(d), String(v)); } catch (e) {}
   }
   for (var bi = 0; bi < 3; bi++) bests[bi] = getBest(bi);
+
+  /* ================= 积分记录 ================= */
+  var scoreHistory = [], totalScore = 0;
+  function loadHistory() {
+    try {
+      var raw = localStorage.getItem('spacePinball.history');
+      if (raw) {
+        var arr = JSON.parse(raw);
+        if (arr && arr.length) {
+          scoreHistory = arr.slice(0, 8).filter(function (e) {
+            return e && typeof e.score === 'number' && typeof e.diff === 'number';
+          });
+        }
+      }
+      totalScore = parseInt(localStorage.getItem('spacePinball.total') || '0', 10) || 0;
+    } catch (e) { scoreHistory = []; totalScore = 0; }
+  }
+  function saveHistory() {
+    try {
+      localStorage.setItem('spacePinball.history', JSON.stringify(scoreHistory.slice(0, 8)));
+      localStorage.setItem('spacePinball.total', String(totalScore));
+    } catch (e) {}
+  }
+  loadHistory();
+
+  /* ================= 家庭排行榜 ================= */
+  var players = [], playerName = '', familyTotal = 0;
+  function loadPlayers() {
+    try {
+      var raw = localStorage.getItem('spacePinball.players');
+      if (raw) {
+        var arr = JSON.parse(raw);
+        if (arr && arr.length) {
+          players = arr.filter(function (p) {
+            return p && typeof p.name === 'string' && p.name;
+          }).slice(0, 20);
+        }
+      }
+      familyTotal = parseInt(localStorage.getItem('spacePinball.familyTotal') || '0', 10) || 0;
+      playerName = localStorage.getItem('spacePinball.player') || '';
+    } catch (e) { players = []; familyTotal = 0; playerName = ''; }
+    for (var i = 0; i < players.length; i++) {
+      players[i].best = players[i].best | 0;
+      players[i].total = players[i].total | 0;
+      players[i].games = players[i].games | 0;
+    }
+    if (!players.length) {
+      var legacyBest = 0;
+      for (var b = 0; b < 3; b++) legacyBest = Math.max(legacyBest, getBest(b));
+      players = [{ name: '小玩家', best: legacyBest, total: totalScore, games: scoreHistory.length }];
+      familyTotal = totalScore;
+      playerName = '小玩家';
+    }
+    if (!playerName) playerName = '小玩家';
+    ensurePlayer(playerName);
+  }
+  function ensurePlayer(name) {
+    var n = String(name || '').trim().slice(0, 8) || '小玩家';
+    for (var i = 0; i < players.length; i++) if (players[i].name === n) return players[i];
+    var p = { name: n, best: 0, total: 0, games: 0 };
+    players.push(p);
+    return p;
+  }
+  function currentPlayer() { return ensurePlayer(playerName); }
+  function savePlayers() {
+    try {
+      localStorage.setItem('spacePinball.players', JSON.stringify(players));
+      localStorage.setItem('spacePinball.player', playerName);
+      localStorage.setItem('spacePinball.familyTotal', String(familyTotal));
+    } catch (e) {}
+  }
+  loadPlayers();
+
+  /* ================= 名字输入 ================= */
+  var nameOverlayEl = document.getElementById('name-overlay');
+  var nameInputEl = document.getElementById('name-input');
+  var nameListEl = document.getElementById('name-list');
+  function openNameEditor() {
+    if (!nameOverlayEl) return;
+    nameListEl.innerHTML = '';
+    players.forEach(function (p) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'name-chip'; b.textContent = p.name;
+      b.addEventListener('click', function () {
+        nameInputEl.value = p.name;
+        try { nameInputEl.focus(); nameInputEl.select(); } catch (e) {}
+      });
+      nameListEl.appendChild(b);
+    });
+    nameInputEl.value = playerName;
+    nameOverlayEl.classList.add('show');
+    setTimeout(function () {
+      try { nameInputEl.focus(); nameInputEl.select(); } catch (e) {}
+    }, 60);
+  }
+  function closeNameEditor() {
+    if (nameOverlayEl) nameOverlayEl.classList.remove('show');
+    if (nameInputEl) { try { nameInputEl.blur(); } catch (e) {} }
+  }
+  function applyName() {
+    var n = (nameInputEl.value || '').trim().slice(0, 8);
+    if (!n) n = '小玩家';
+    playerName = n;
+    ensurePlayer(n);
+    savePlayers();
+    closeNameEditor();
+    initAudio();
+  }
+  if (nameInputEl) {
+    nameInputEl.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); applyName(); }
+    });
+  }
+  var nameOkEl = document.getElementById('name-ok');
+  if (nameOkEl) nameOkEl.addEventListener('click', applyName);
+  var nameCancelEl = document.getElementById('name-cancel');
+  if (nameCancelEl) nameCancelEl.addEventListener('click', closeNameEditor);
+  if (nameOverlayEl) nameOverlayEl.addEventListener('pointerdown', function (e) {
+    if (e.target === nameOverlayEl) closeNameEditor();
+  });
 
   /* ================= 声音 ================= */
   var audioCtx = null, master = null, muted = false;
@@ -490,6 +656,13 @@
     }
 
     if (state === 'menu') {
+      if (p.x > 240 && p.x < 480 && p.y > 238 && p.y < 278) { openNameEditor(); return; }
+      if (p.x > 290 && p.x < 430 && p.y > 915 && p.y < 965) {
+        initAudio();
+        playChime();
+        cheerText = '听到声音就正常'; cheerT = 1.8;
+        return;
+      }
       var ci = menuHit(p);
       if (ci >= 0) startGame(ci);
       return;
@@ -552,6 +725,7 @@
 
   window.addEventListener('keydown', function (e) {
     var k = e.key;
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
     if (k === 'm' || k === 'M') { e.preventDefault(); toggleMute(); return; }
     if (k === 'l' || k === 'L') { e.preventDefault(); lightT = 2.5; lightMode = (lightMode + 1) % 3; return; }
     if (state === 'quiz') {
@@ -590,6 +764,7 @@
   /* ================= 手柄 ================= */
   function padPressed(gp, i) { return !!(gp.buttons[i] && gp.buttons[i].pressed); }
   function onPadA() {
+    if (nameOverlayEl && nameOverlayEl.classList.contains('show')) return;
     if (state === 'quiz') { answerQuiz(quizSel); return; }
     if (state === 'menu') { startGame(menuSel); return; }
     if (state === 'ready') {
@@ -599,8 +774,9 @@
     if (state === 'over') startGame(diff);
   }
   function onPadARelease() { if (state === 'ready' && charging) releaseCharge(); }
-  function onPadB() { if (state === 'over') toMenu(); }
+  function onPadB() { if (nameOverlayEl && nameOverlayEl.classList.contains('show')) { closeNameEditor(); return; } if (state === 'over') toMenu(); }
   function onPadStart() {
+    if (nameOverlayEl && nameOverlayEl.classList.contains('show')) return;
     if (state === 'menu') { startGame(menuSel); return; }
     if (state === 'over') { startGame(diff); return; }
     if (state === 'ready') startLaunch(0.6);
@@ -725,7 +901,7 @@
     state = 'ready';
     ball.active = false; ball.vx = 0; ball.vy = 0;
     var p = pipeAt(0); ball.x = p.x; ball.y = p.y;
-    ball.trail.length = 0; ball.stuck = 0;
+    ball.trail.length = 0; ball.stuck = 0; ball.grace = 0; ball.boost = 0;
     charge = 0; charging = false; chargePhase = 0; chargePointer = -1; readyTimer = 0; chargeTime = 0;
     setFlippersRest();
     burst(690, 1160, '#9fd8ff', 10, 150);
@@ -748,6 +924,17 @@
     newRecord = score > getBest(diff);
     if (newRecord) setBest(diff, score);
     bests[diff] = getBest(diff);
+    var cp = currentPlayer();
+    cp.best = Math.max(cp.best, score);
+    cp.total += score;
+    cp.games += 1;
+    familyTotal += score;
+    var now = new Date();
+    scoreHistory.unshift({ score: score, diff: diff, date: (now.getMonth() + 1) + '/' + now.getDate(), name: playerName });
+    if (scoreHistory.length > 8) scoreHistory.length = 8;
+    totalScore += score;
+    savePlayers();
+    saveHistory();
     playGameOver();
     burst(W / 2, 520, '#ffd166', 30, 380);
     setTimeout(function () { burst(W / 2 - 90, 480, '#7fe0ff', 20, 320); }, 160);
@@ -834,6 +1021,9 @@
     if (state !== 'ready') return;
     charging = false; charge = 0; chargePointer = -1; chargeTime = 0;
     launchPow = clamp(power, 0, 1); launchT = 0;
+    var lt = clamp((launchPow * 3 - 1) / 2, 0, 1);
+    var lsp = D.launch * (0.25 + 0.75 * lt);
+    launchDur = clamp(pipeLen / lsp, 0.55, 4.5);
     state = 'launching'; ball.active = false; ball.trail.length = 0;
     burst(690, 1160, '#ffe6a0', 12, 180);
     playLaunch();
@@ -853,12 +1043,14 @@
   }
   function finishLaunch() {
     state = 'playing';
-    ball.active = true; ball.x = 636; ball.y = 280;
+    ball.active = true; ball.x = PIPE[3].x; ball.y = PIPE[3].y; ball.grace = 0.12;
     var tan = pipeTan(1);
-    var sp = D.launch * (0.4 + 0.6 * launchPow);
+    var lt = clamp((launchPow * 3 - 1) / 2, 0, 1);
+    var sp = D.launch * (0.25 + 0.75 * lt);
     ball.vx = tan.x * sp; ball.vy = tan.y * sp;
+    ball.boost = 0;
     ball.trail.length = 0; ball.stuck = 0;
-    burst(636, 280, '#9fe4ff', 18, 260);
+    burst(PIPE[3].x, PIPE[3].y, '#9fe4ff', 18, 260);
     learn('meteor');
   }
   function drain() {
@@ -895,7 +1087,7 @@
   function collideGate() {
     if (ball.vx <= 0) return;
     if (ball.x < 628) return;
-    if (ball.y > 256 && ball.y < 304) {
+    if (ball.y > 230 && ball.y < 330) {
       ball.x = 628;
       ball.vx = -Math.abs(ball.vx) * 0.5;
     }
@@ -1133,15 +1325,29 @@
       ball.vy += (sdy / sd) * gf * h;
     }
 
+    if (ball.boost > 0) {
+      ball.boost -= h;
+      var bs = Math.hypot(ball.vx, ball.vy) || 1;
+      if (bs < ball.boostSp) {
+        var add = Math.min(ball.boostSp - bs, 2600 * h);
+        ball.vx += ball.vx / bs * add;
+        ball.vy += ball.vy / bs * add;
+      }
+    }
+
     ball.x += ball.vx * h; ball.y += ball.vy * h;
 
     if (ball.x < WALL_L + BALL_R) { ball.x = WALL_L + BALL_R; if (ball.vx < 0) ball.vx *= -0.85; }
     if (ball.y < WALL_T + BALL_R) { ball.y = WALL_T + BALL_R; if (ball.vy < 0) ball.vy *= -0.85; }
 
     for (var gi = 0; gi < guides.length; gi++) collideSegment(guides[gi]);
-    collideSegment(wallTop);
-    collideSegment(wallBot);
-    collideGate();
+    if (ball.grace > 0) {
+      ball.grace -= h;
+    } else {
+      collideSegment(wallTop);
+      collideSegment(wallBot);
+      collideGate();
+    }
     for (var fl = 0; fl < flippers.length; fl++) collideFlipper(flippers[fl]);
     collideSun();
     for (var oi = 0; oi < ORBITERS.length; oi++) collideOrbiter(ORBITERS[oi]);
@@ -1237,13 +1443,12 @@
       if (charging) {
         chargeTime += dt;
         charge = Math.min(1, chargeTime / 3);
-        ball.y = 1160 - charge * 10;
       }
     } else if (state === 'launching') {
-      launchT += dt / 0.5;
+      launchT += dt / launchDur;
       if (launchT >= 1) { launchT = 1; finishLaunch(); }
       else {
-        var pp = pipeAt(launchT);
+        var pp = pipeAtArc(launchT);
         ball.x = pp.x; ball.y = pp.y;
         ball.trail.push({ x: pp.x, y: pp.y });
         if (ball.trail.length > 16) ball.trail.shift();
@@ -1474,7 +1679,82 @@
   })();
 
   /* ================= 绘制 ================= */
+  function drawLaunchBayBack() {
+    ctx.save();
+    var pg = ctx.createLinearGradient(660, 100, 720, 100);
+    pg.addColorStop(0, 'rgba(10,26,50,0.96)');
+    pg.addColorStop(0.55, 'rgba(7,16,34,0.96)');
+    pg.addColorStop(1, 'rgba(12,32,62,0.96)');
+    ctx.fillStyle = pg;
+    ctx.fillRect(660, 100, 60, 1102);
+    ctx.strokeStyle = 'rgba(90,200,255,0.35)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(661, 100); ctx.lineTo(661, 1202); ctx.stroke();
+    ctx.strokeStyle = 'rgba(90,200,255,0.2)';
+    ctx.beginPath(); ctx.moveTo(718, 100); ctx.lineTo(718, 1202); ctx.stroke();
+    ctx.fillStyle = 'rgba(18,44,78,0.95)';
+    rr(ctx, 662, 104, 56, 72, 8); ctx.fill();
+    ctx.strokeStyle = 'rgba(100,200,255,0.35)'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawLaunchBayFront() {
+    ctx.save();
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = '700 12px ' + FONT; ctx.fillStyle = '#bfe6ff';
+    ctx.fillText('发射', 690, 124);
+    ctx.font = '600 10px ' + FONT; ctx.fillStyle = 'rgba(150,200,245,0.7)';
+    ctx.fillText('LAUNCH', 690, 140);
+    ctx.font = '500 9px ' + FONT; ctx.fillStyle = 'rgba(140,190,235,0.55)';
+    ctx.fillText('按住蓄力', 690, 158);
+
+    var bolts = [[668, 112], [712, 112], [668, 1190], [712, 1190]];
+    for (var bi = 0; bi < bolts.length; bi++) {
+      ctx.fillStyle = 'rgba(160,210,255,0.55)';
+      ctx.beginPath(); ctx.arc(bolts[bi][0], bolts[bi][1], 2.2, 0, TAU); ctx.fill();
+    }
+
+    ctx.fillStyle = 'rgba(4,10,22,0.9)';
+    rr(ctx, 708, 890, 8, 232, 4); ctx.fill();
+    var ch = state === 'ready' ? charge : (state === 'launching' ? 1 : 0);
+    var gh = 228 * ch;
+    var gcol = ch < 0.333 ? '#ff8a8a' : (ch < 0.9 ? '#7fe0ff' : '#ffd166');
+    if (gh > 2) {
+      ctx.save();
+      ctx.shadowColor = gcol; ctx.shadowBlur = 10;
+      ctx.fillStyle = gcol;
+      rr(ctx, 709, 1118 - gh, 6, gh, 3); ctx.fill();
+      ctx.restore();
+    }
+    ctx.strokeStyle = 'rgba(180,220,255,0.55)'; ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(704, 1118); ctx.lineTo(716, 1118);
+    ctx.moveTo(704, 1042); ctx.lineTo(716, 1042);
+    ctx.moveTo(704, 890); ctx.lineTo(716, 890);
+    ctx.stroke();
+    ctx.font = '600 9px ' + FONT; ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(180,215,250,0.65)';
+    ctx.fillText('1s', 717, 1042);
+    ctx.fillText('3s', 717, 890);
+
+    ctx.save();
+    ctx.translate(690, 1160);
+    ctx.fillStyle = 'rgba(8,20,40,0.95)';
+    ctx.beginPath(); ctx.arc(0, 0, 33, 0, TAU); ctx.fill();
+    ctx.strokeStyle = 'rgba(120,210,255,0.55)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(0, 0, 33, 0, TAU); ctx.stroke();
+    ctx.strokeStyle = 'rgba(120,210,255,0.2)'; ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.arc(0, 0, 29, 0, TAU); ctx.stroke();
+    ctx.restore();
+
+    ctx.font = '600 9px ' + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = 'rgba(150,200,245,0.7)';
+    ctx.fillText('松开发射', 690, 1200);
+    ctx.fillStyle = 'rgba(18,44,78,0.95)';
+    rr(ctx, 662, 1198, 56, 3, 1.5); ctx.fill();
+    ctx.restore();
+  }
+
   function drawPipe() {
+    drawLaunchBayBack();
     var i;
     var path = new Path2D();
     path.moveTo(PIPE[0].x, PIPE[0].y);
@@ -1494,27 +1774,6 @@
     ctx.strokeStyle = 'rgba(70,150,255,0.18)';
     ctx.lineWidth = 26;
     ctx.stroke(path);
-
-    var lit = 0;
-    if (state === 'ready') lit = charge;
-    else if (state === 'launching') lit = 1 - launchT * 0.5;
-    if (lit > 0.01) {
-      var sub = new Path2D();
-      sub.moveTo(PIPE[0].x, PIPE[0].y);
-      var n = 40;
-      for (i = 1; i <= n; i++) {
-        var t = (i / n) * lit;
-        var p = pipeAt(t);
-        sub.lineTo(p.x, p.y);
-      }
-      ctx.save();
-      ctx.shadowColor = '#7fe0ff';
-      ctx.shadowBlur = 18;
-      ctx.strokeStyle = 'rgba(150,240,255,0.95)';
-      ctx.lineWidth = 6;
-      ctx.stroke(sub);
-      ctx.restore();
-    }
 
     for (i = 1; i <= 5; i++) {
       var tt = i / 6;
@@ -1551,15 +1810,7 @@
     ctx.lineWidth = 3;
     ctx.beginPath(); ctx.arc(base.x, base.y + 16, 26, 0, TAU); ctx.stroke();
 
-    if (state === 'ready') {
-      ctx.save();
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.font = '700 14px ' + FONT;
-      var cs = Math.min(3, chargeTime);
-      ctx.fillStyle = chargeTime < 1 ? 'rgba(255,150,150,0.95)' : 'rgba(180,235,255,0.95)';
-      ctx.fillText(cs.toFixed(1) + 's', base.x, base.y - 42);
-      ctx.restore();
-    }
+    drawLaunchBayFront();
     ctx.restore();
   }
 
@@ -1760,25 +2011,24 @@
   function drawFlippers() {
     for (var i = 0; i < flippers.length; i++) {
       var f = flippers[i];
-      var tx = f.px + Math.cos(f.angle) * FLIP_LEN;
-      var ty = f.py + Math.sin(f.angle) * FLIP_LEN;
       ctx.save();
-      ctx.lineCap = 'round';
+      ctx.translate(f.px, f.py);
+      ctx.rotate(f.angle);
+      var g = ctx.createLinearGradient(0, 0, FLIP_LEN, 0);
+      g.addColorStop(0, '#ffe2a8'); g.addColorStop(0.45, '#ffb85c'); g.addColorStop(1, '#ff7a3d');
       ctx.shadowColor = 'rgba(255,160,70,0.85)';
       ctx.shadowBlur = 16;
-      var g = ctx.createLinearGradient(f.px, f.py, tx, ty);
-      g.addColorStop(0, '#ffe2a8'); g.addColorStop(0.45, '#ffb85c'); g.addColorStop(1, '#ff7a3d');
-      ctx.strokeStyle = g; ctx.lineWidth = FLIP_R * 2;
-      ctx.beginPath(); ctx.moveTo(f.px, f.py); ctx.lineTo(tx, ty); ctx.stroke();
+      ctx.fillStyle = g;
+      rr(ctx, 0, -FLIP_R, FLIP_LEN, FLIP_R * 2, FLIP_R);
+      ctx.fill();
       ctx.shadowBlur = 0;
-      var ox = Math.cos(f.angle + Math.PI / 2) * 6;
-      var oy = Math.sin(f.angle + Math.PI / 2) * 6;
-      ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 5;
-      ctx.beginPath(); ctx.moveTo(f.px + ox, f.py + oy); ctx.lineTo(tx + ox, ty + oy); ctx.stroke();
+      ctx.fillStyle = 'rgba(255,255,255,0.38)';
+      rr(ctx, 10, -FLIP_R + 4, FLIP_LEN - 24, 5, 2.5);
+      ctx.fill();
       ctx.fillStyle = '#fff0c8';
-      ctx.beginPath(); ctx.arc(f.px, f.py, FLIP_R * 0.62, 0, TAU); ctx.fill();
+      ctx.beginPath(); ctx.arc(0, 0, FLIP_R * 0.62, 0, TAU); ctx.fill();
       ctx.fillStyle = 'rgba(255,140,60,0.9)';
-      ctx.beginPath(); ctx.arc(f.px, f.py, FLIP_R * 0.3, 0, TAU); ctx.fill();
+      ctx.beginPath(); ctx.arc(0, 0, FLIP_R * 0.3, 0, TAU); ctx.fill();
       ctx.restore();
     }
   }
@@ -1905,7 +2155,7 @@
     ctx.fillStyle = launchHintT > 0 ? '#ffd166' : 'rgba(220,240,255,0.9)';
     ctx.shadowColor = 'rgba(80,160,255,0.8)'; ctx.shadowBlur = 12;
     var hint = launchHintT > 0 ? launchHintMsg : '按住右侧发射器 ≥1 秒 · 3 秒满力';
-    ctx.fillText(hint, 470, 1150);
+    ctx.fillText(hint, 360, 1150);
     ctx.restore();
     var pulse = 0.5 + 0.5 * Math.sin(time * 3);
     ctx.save();
@@ -1964,6 +2214,86 @@
     ctx.restore();
   }
 
+  function drawHistoryPanel(x, y, w, rows, highlightFirst) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(8,20,45,0.7)';
+    rr(ctx, x, y, w, 34 + rows * 24 + 14, 14); ctx.fill();
+    ctx.strokeStyle = 'rgba(100,190,255,0.25)'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.font = '700 15px ' + FONT;
+    ctx.fillStyle = 'rgba(190,225,255,0.9)';
+    ctx.fillText('最近成绩', x + 16, y + 20);
+    ctx.textAlign = 'right';
+    ctx.font = '600 14px ' + FONT;
+    ctx.fillStyle = 'rgba(255,209,102,0.9)';
+    ctx.fillText('累计 ' + totalScore, x + w - 16, y + 20);
+    if (!scoreHistory.length) {
+      ctx.textAlign = 'center';
+      ctx.font = '500 14px ' + FONT;
+      ctx.fillStyle = 'rgba(160,200,240,0.6)';
+      ctx.fillText('还没有记录，先玩一局吧', x + w / 2, y + 52);
+      ctx.restore();
+      return;
+    }
+    var n = Math.min(rows, scoreHistory.length);
+    for (var i = 0; i < n; i++) {
+      var h = scoreHistory[i];
+      var yy = y + 40 + i * 24;
+      ctx.textAlign = 'left';
+      ctx.font = (highlightFirst && i === 0 ? '700 ' : '500 ') + '15px ' + FONT;
+      ctx.fillStyle = highlightFirst && i === 0 ? '#ffd166' : 'rgba(200,230,255,0.85)';
+      ctx.fillText(DIFFS[h.diff] ? DIFFS[h.diff].name : '', x + 20, yy);
+      ctx.textAlign = 'center';
+      ctx.fillText(String(h.score), x + w * 0.48, yy);
+      ctx.textAlign = 'right';
+      ctx.fillStyle = 'rgba(150,190,230,0.65)';
+      ctx.font = '500 13px ' + FONT;
+      ctx.fillText(h.date || '', x + w - 18, yy);
+    }
+    ctx.restore();
+  }
+
+  function drawFamilyBoard(x, y, w, rows) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(8,20,45,0.7)';
+    rr(ctx, x, y, w, 34 + rows * 24 + 14, 14); ctx.fill();
+    ctx.strokeStyle = 'rgba(100,190,255,0.25)'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.font = '700 15px ' + FONT;
+    ctx.fillStyle = 'rgba(190,225,255,0.9)';
+    ctx.fillText('家庭排行榜', x + 16, y + 20);
+    ctx.textAlign = 'right';
+    ctx.font = '600 14px ' + FONT;
+    ctx.fillStyle = 'rgba(255,209,102,0.9)';
+    ctx.fillText('累计 ' + familyTotal, x + w - 16, y + 20);
+    var sorted = players.slice().sort(function (a, b) { return b.best - a.best || b.total - a.total; });
+    if (!sorted.length) {
+      ctx.textAlign = 'center'; ctx.font = '500 14px ' + FONT;
+      ctx.fillStyle = 'rgba(160,200,240,0.6)';
+      ctx.fillText('还没有成绩，先玩一局吧', x + w / 2, y + 52);
+      ctx.restore();
+      return;
+    }
+    var n = Math.min(rows, sorted.length);
+    for (var i = 0; i < n; i++) {
+      var p = sorted[i];
+      var yy = y + 40 + i * 24;
+      var me = p.name === playerName;
+      ctx.textAlign = 'left';
+      ctx.font = (me ? '700 ' : '500 ') + '15px ' + FONT;
+      ctx.fillStyle = me ? '#ffd166' : 'rgba(200,230,255,0.85)';
+      ctx.fillText((i + 1) + '. ' + p.name, x + 20, yy);
+      ctx.textAlign = 'right';
+      ctx.font = '600 14px ' + FONT;
+      ctx.fillStyle = me ? '#ffd166' : 'rgba(200,230,255,0.75)';
+      ctx.fillText('最高 ' + p.best, x + w * 0.64, yy);
+      ctx.fillStyle = 'rgba(150,190,230,0.7)';
+      ctx.font = '500 13px ' + FONT;
+      ctx.fillText('总分 ' + p.total, x + w - 18, yy);
+    }
+    ctx.restore();
+  }
+
   function drawMenu() {
     ctx.save();
     ctx.fillStyle = 'rgba(4,7,24,0.84)';
@@ -1978,6 +2308,13 @@
     ctx.font = '500 21px ' + FONT;
     ctx.fillStyle = 'rgba(200,225,255,0.8)';
     ctx.fillText('选一个球速开始 · 三档都是 3 颗球', 360, 225);
+    ctx.fillStyle = 'rgba(80,180,255,0.14)';
+    rr(ctx, 240, 238, 240, 40, 20); ctx.fill();
+    ctx.strokeStyle = 'rgba(100,200,255,0.45)'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = '600 17px ' + FONT;
+    ctx.fillStyle = '#bfe6ff';
+    ctx.fillText('玩家：' + playerName + '  ✎', 360, 258);
 
     for (var i = 0; i < 3; i++) {
       var d = DIFFS[i];
@@ -2020,6 +2357,13 @@
     ctx.font = '500 21px ' + FONT;
     ctx.fillStyle = 'rgba(160,200,240,0.55)';
     ctx.fillText('点卡片开始 · 也可以按 1 / 2 / 3', 360, 880);
+    ctx.fillStyle = 'rgba(80,180,255,0.16)';
+    rr(ctx, 290, 915, 140, 50, 13); ctx.fill();
+    ctx.strokeStyle = 'rgba(100,200,255,0.55)'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.font = '700 19px ' + FONT;
+    ctx.fillStyle = '#bfe6ff';
+    ctx.fillText('试听声音', 360, 941);
+    drawFamilyBoard(100, 1030, 520, 3);
     ctx.restore();
   }
 
@@ -2077,6 +2421,7 @@
     ctx.font = '600 24px ' + FONT;
     ctx.fillStyle = 'rgba(200,230,255,0.85)';
     ctx.fillText('换个难度', 360, 803);
+    drawFamilyBoard(100, 950, 520, 5);
     ctx.restore();
   }
 
@@ -2557,7 +2902,7 @@
       }
       ctx.strokeStyle = 'rgba(70,110,170,0.25)';
       ctx.lineWidth = 3;
-      rr(ctx, 42, 102, 636, 1098, 18); ctx.stroke();
+      rr(ctx, 42, 102, 616, 1098, 18); ctx.stroke();
       ctx.restore();
       return;
     }
@@ -2590,7 +2935,7 @@
     ctx.shadowColor = borderCol;
     ctx.shadowBlur = 20;
     ctx.lineWidth = 3.5;
-    rr(ctx, 42, 102, 636, 1098, 18); ctx.stroke();
+    rr(ctx, 42, 102, 616, 1098, 18); ctx.stroke();
     ctx.shadowBlur = 0;
     ctx.globalAlpha = 1;
     ctx.restore();
@@ -2606,7 +2951,7 @@
     ctx.font = '600 16px ' + FONT;
     ctx.fillStyle = 'rgba(255,210,120,0.95)';
     ctx.shadowColor = 'rgba(255,160,60,0.7)'; ctx.shadowBlur = 10;
-    ctx.fillText(msg, 360, 950);
+    ctx.fillText(msg, 360, 1000);
     ctx.restore();
   }
 
@@ -2623,11 +2968,11 @@
     ctx.globalAlpha = 1;
     ctx.setTransform(dpr * scale, 0, 0, dpr * scale, offX * dpr, offY * dpr);
     ctx.drawImage(bg, 0, 0, W, H);
-    drawPipe();
     drawGuides();
     drawSprings();
     drawSolar();
     drawSideDecor();
+    drawPipe();
     drawLightStrips();
     drawFlippers();
     drawBall();
